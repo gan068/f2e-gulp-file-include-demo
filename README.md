@@ -13,8 +13,16 @@ yarn global add gulp-cli
 yarn install
 ```
 
-## build html
+## tasks
+
+### build html
 
 ```bash
-gulp fileinclude
+gulp build
+```
+
+### run live server and reloading
+
+```bash
+gulp live
 ```
