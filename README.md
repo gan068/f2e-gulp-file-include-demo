@@ -2,9 +2,9 @@
 
 ## requirements
 
-1. nodejs > 12.16.0
-2. yarn > 1.22.0
-3. gulp-cli 2.2.0
+1. nodejs >= 12.16.0
+2. yarn >= 1.22.0
+3. gulp >= 4
 
 ## init
 
@@ -15,7 +15,19 @@ yarn install
 
 ## tasks
 
-### build html
+### clean dist files
+
+```bash
+gulp clean-dist
+```
+
+### do js lint
+
+```bash
+gulp js-lint
+```
+
+### build files
 
 ```bash
 gulp build
