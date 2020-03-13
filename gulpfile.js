@@ -1,30 +1,43 @@
 gulp = require("gulp");
 gulpLoadPlugins = require("gulp-load-plugins");
 $ = gulpLoadPlugins();
-
+$.path = require("path");
 $.connect = require("gulp-connect");
-$.fileInclude = require("gulp-file-include");
+$.config = require("gulp-data");
+$.twig = require("gulp-twig");
 $.del = require("del");
 $.sass = require("gulp-sass");
 $.browsersync = require("browser-sync");
 $.plumber = require("gulp-plumber");
 $.eslint = require("gulp-eslint");
 $.notify = require("gulp-notify");
+$.fs = require("fs");
 
 function cleanDist(cb) {
   $.del(["dist/**/*", "!dist/.gitkeep"]);
   cb();
 }
-function buildFile(cb) {
+function buildTwig(cb) {
   gulp
-    .src(["./src/**/*.html"])
-    .pipe($.plumber())
+    .src(["./src/**/*.twig"])
     .pipe(
-      $.fileInclude({
-        prefix: "@@",
-        basepath: "./src"
+      $.plumber({
+        handleError: function(err) {
+          console.log(err);
+          this.emit("end");
+        }
       })
     )
+    .pipe(
+      $.config(function(file) {
+        return JSON.parse($.fs.readFileSync("./config.json"));
+      })
+    )
+    .pipe($.twig())
+    .on("error", function(err) {
+      process.stderr.write(err.message + "\n");
+      this.emit("end");
+    })
     .pipe(gulp.dest("./dist"))
     .pipe($.browsersync.stream());
   cb();
@@ -68,12 +81,19 @@ function copyFile(cb) {
 
 // Lint scripts
 function jsLint() {
-  return gulp
-    .src(["./assets/js/**/*", "./gulpfile.js"])
-    .pipe($.plumber())
-    .pipe($.eslint("./eslint.json"))
-    .pipe($.eslint.format())
-    .pipe($.eslint.failAfterError());
+  return (
+    gulp
+      .src(["./src/**/*.js", "./gulpfile.js"])
+      //.pipe($.plumber())
+      .pipe($.eslint("./eslint.json"))
+      .pipe($.eslint.format())
+      .on("error", function(err) {
+        process.stderr.write(err.message + "\n");
+        this.emit("end");
+      })
+      .pipe($.eslint.failAfterError())
+  );
+  //
 }
 
 // BrowserSync
@@ -88,7 +108,7 @@ function browserSync(cb) {
   cb();
 }
 
-gulp.task("build", gulp.parallel([buildFile, buildJs, buildSass, copyFile]));
+gulp.task("build", gulp.parallel([buildTwig, buildJs, buildSass, copyFile]));
 gulp.task("clean-dist", cleanDist);
 gulp.task("js-lint", jsLint);
 
@@ -101,7 +121,7 @@ function browserSyncReload(cb) {
 gulp.task("server", browserSync);
 
 gulp.task("watch", function(cb) {
-  gulp.watch(["src/**/*.html"], gulp.series(buildFile));
+  gulp.watch(["src/**/*.twig", "config.json"], gulp.series(buildTwig));
   gulp.watch(["./src/**/*.scss", "./src/**/*.css"], buildSass);
   gulp.watch(["./src/**/*.js"], gulp.series([jsLint, buildJs]));
   gulp.watch(

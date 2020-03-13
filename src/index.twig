@@ -5,9 +5,9 @@
         <link rel="stylesheet" href="css/base.css" >
     </head>
   <body>
-  @@include('./_include/header.html')
-  這是首頁 <div id="hello" class="hello-block"></div>
-  @@include('./_include/footer.html')
+    {% include './_include/header.twig' %}
+    這是首頁 <div id="hello" class="hello-block"></div>
+    {% include './_include/footer.twig' %}
   <script src="js/hello-world.js"></script>
   </body>
 </html>

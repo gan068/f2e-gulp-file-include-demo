@@ -1,3 +1,3 @@
 window.onload = function() {
-    this.alert('main02.js');
+    this.alert("main03.js");
 };
