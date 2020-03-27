@@ -12,6 +12,8 @@ $.plumber = require("gulp-plumber");
 $.eslint = require("gulp-eslint");
 $.notify = require("gulp-notify");
 $.fs = require("fs");
+$.rename = require('gulp-rename');
+$.cleanCss = require("gulp-clean-css");
 
 function cleanDist(cb) {
   $.del(["dist/**/*", "!dist/.gitkeep"]);
@@ -61,6 +63,20 @@ function buildSass(cb) {
     .pipe($.notify("build sass finished"));
   cb();
 }
+function buildMinifyCss(cb) {
+  gulp
+    .src(["./src/**/*.scss", "./src/**/*.css"])
+    .pipe($.plumber())
+    .pipe($.cleanCss())
+    .pipe($.rename(function(path){
+        path.basename = path.basename,
+        extname = ".min.css"
+    }))
+    .pipe(gulp.dest("./dist"))
+    .pipe($.browsersync.stream())
+    .pipe($.notify("build minify css finished"));
+  cb();
+}
 function copyFile(cb) {
   gulp
     .src([
@@ -108,7 +124,7 @@ function browserSync(cb) {
   cb();
 }
 
-gulp.task("build", gulp.parallel([buildTwig, buildJs, buildSass, copyFile]));
+gulp.task("build", gulp.parallel([buildTwig, buildJs, buildSass, buildMinifyCss, copyFile]));
 gulp.task("clean-dist", cleanDist);
 gulp.task("js-lint", jsLint);
 
@@ -123,6 +139,7 @@ gulp.task("server", browserSync);
 gulp.task("watch", function(cb) {
   gulp.watch(["src/**/*.twig", "config.json"], gulp.series(buildTwig));
   gulp.watch(["./src/**/*.scss", "./src/**/*.css"], buildSass);
+  gulp.watch(["./src/**/*.scss", "./src/**/*.css"], buildMinifyCss);
   gulp.watch(["./src/**/*.js"], gulp.series([jsLint, buildJs]));
   gulp.watch(
     [
